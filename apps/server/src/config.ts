@@ -12,6 +12,8 @@ const schema = z.object({
   VAPID_PRIVATE_KEY: z.string().optional().default(''),
   VAPID_SUBJECT: z.string().default('mailto:admin@example.com'),
   WEB_DIST_DIR: z.string().optional().default(''),
+  /** Endereço público usado nos links enviados aos clientes (ex.: https://atendimento.suaconfeccao.com.br) */
+  PUBLIC_URL: z.string().optional().default(''),
   LOG_LEVEL: z.string().default('info'),
 });
 

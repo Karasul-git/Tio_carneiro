@@ -131,3 +131,13 @@ describe('passagem fora do horário', () => {
     expect(msg).toContain('assim que voltarmos');
   });
 });
+
+describe('opção de menu que envia o link de pedido', () => {
+  it('envia o link e passa ao atendente', () => {
+    const s = { ...settings, menu: settings.menu.map((o) => (o.key === '1' ? { ...o, action: 'order' as const, prompt: 'Monte aqui: {link}' } : o)) };
+    const r = decide({ settings: s, state: { ...fresh, botState: 'MENU' }, text: '1', contactName: null, isOpen: true, search: () => [] });
+    expect(r.actions).toContainEqual({ type: 'orderLink', text: 'Monte aqui: {link}' });
+    expect(r.state.botState).toBe('HANDOFF');
+    expect(r.state.botMessagesInSession).toBe(1);
+  });
+});

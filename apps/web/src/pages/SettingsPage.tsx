@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../lib/auth';
 import { roleLabel } from '../lib/format';
+import CompanySettings from '../components/CompanySettings';
 import { disablePush, enablePush, isPushEnabled, pushSupported } from '../lib/push';
 
 export default function SettingsPage() {
-  const { user, logout } = useAuth();
+  const { user, logout, isManager } = useAuth();
   const [pushOn, setPushOn] = useState(false);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
@@ -68,6 +69,7 @@ export default function SettingsPage() {
         </button>
         {msg && <p className="small">{msg}</p>}
       </section>
+      {isManager && <CompanySettings />}
     </div>
   );
 }

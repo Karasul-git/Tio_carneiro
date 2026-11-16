@@ -61,7 +61,7 @@ export type MenuOption = {
   key: string;
   label: string;
   intent: string;
-  action: 'faq' | 'collect' | 'handoff';
+  action: 'faq' | 'collect' | 'handoff' | 'order';
   prompt: string;
   keywords: string[];
 };
@@ -98,4 +98,94 @@ export type Message = {
   type: string;
   body: string | null;
   timestamp: string;
+};
+
+export type Product = {
+  id: string;
+  name: string;
+  description: string | null;
+  category: string | null;
+  sku: string | null;
+  priceCents: number | null;
+  sizes: string[];
+  colors: string[];
+  sizeSurchargeCents: Record<string, number> | null;
+  minQuantity: number;
+  customizable: boolean;
+  imageUrl: string | null;
+  active: boolean;
+  position: number;
+  ncm: string | null;
+  cfop: string | null;
+  origin: number | null;
+  unit: string;
+};
+
+export type Customer = {
+  id: string;
+  name: string;
+  personType: 'PF' | 'PJ';
+  document: string | null;
+  stateRegistration: string | null;
+  email: string | null;
+  phone: string | null;
+  zipCode: string | null;
+  street: string | null;
+  number: string | null;
+  complement: string | null;
+  district: string | null;
+  city: string | null;
+  state: string | null;
+  cityCode: string | null;
+  notes: string | null;
+  _count?: { orders: number };
+};
+
+export type OrderStatus = 'DRAFT' | 'SUBMITTED' | 'CONFIRMED' | 'IN_PRODUCTION' | 'READY' | 'DELIVERED' | 'CANCELLED';
+
+export type OrderItem = {
+  id?: string;
+  productId: string | null;
+  description: string;
+  size: string | null;
+  color: string | null;
+  quantity: number;
+  unitPriceCents: number | null;
+  customization: string | null;
+};
+
+export type Order = {
+  id: string;
+  number: number;
+  token: string;
+  status: OrderStatus;
+  customer: Customer | null;
+  customerId: string | null;
+  connection: { id: string; name: string } | null;
+  conversation: { id: string; contact: { id: string; name: string | null; phone: string | null } } | null;
+  createdBy: { id: string; name: string } | null;
+  deliveryMethod: 'PICKUP' | 'DELIVERY';
+  desiredDate: string | null;
+  dueDate: string | null;
+  customerNotes: string | null;
+  internalNotes: string | null;
+  discountCents: number;
+  shippingCents: number;
+  totalCents: number;
+  submittedAt: string | null;
+  confirmedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  items: OrderItem[];
+  link?: string;
+};
+
+export type Company = {
+  name: string;
+  document: string;
+  showPrices: boolean;
+  publicUrl: string;
+  orderLinkMessage: string;
+  orderReceivedMessage: string;
+  orderPageIntro: string;
 };

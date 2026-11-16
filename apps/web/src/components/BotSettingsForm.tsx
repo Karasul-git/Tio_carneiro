@@ -95,11 +95,12 @@ export default function BotSettingsForm() {
                 <option value="collect">Pede detalhes e passa ao atendente</option>
                 <option value="faq">Responde dúvidas pela base</option>
                 <option value="handoff">Passa direto ao atendente</option>
+                <option value="order">Envia o link de pedido (catálogo)</option>
               </select>
             </label>
             {o.action !== 'handoff' && (
               <label>
-                Mensagem ao escolher
+                {o.action === 'order' ? 'Mensagem com o link (use {link}; vazio = texto padrão da empresa)' : 'Mensagem ao escolher'}
                 <textarea rows={2} value={o.prompt} onChange={(e) => setMenu(i, { prompt: e.target.value })} />
               </label>
             )}

@@ -58,6 +58,7 @@ model User {
   connections       WhatsAppConnection[]
   pushSubscriptions PushSubscription[]
   sentMessages      Message[]
+  createdOrders     Order[]
 }
 
 model WhatsAppConnection {
@@ -76,6 +77,7 @@ model WhatsAppConnection {
 
   contacts      Contact[]
   conversations Conversation[]
+  orders        Order[]
 }
 
 model Contact {
@@ -90,42 +92,46 @@ model Contact {
   updatedAt    DateTime           @updatedAt
 
   conversations Conversation[]
+  /// Cadastro de cliente (preenchido quando o cliente faz um pedido)
+  customerId    String?
+  customer      Customer?      @relation(fields: [customerId], references: [id], onDelete: SetNull)
 
   @@unique([connectionId, jid])
 }
 
 model Conversation {
-  id             String             @id @default(cuid())
-  connectionId   String
-  connection     WhatsAppConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
-  contactId      String
-  contact        Contact            @relation(fields: [contactId], references: [id], onDelete: Cascade)
-  status         ConversationStatus @default(OPEN)
+  id              String             @id @default(cuid())
+  connectionId    String
+  connection      WhatsAppConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  contactId       String
+  contact         Contact            @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  status          ConversationStatus @default(OPEN)
   /// Momento da mensagem mais antiga do cliente ainda sem resposta (null = respondida)
-  awaitingSince  DateTime?
-  lastMessageAt  DateTime?
+  awaitingSince   DateTime?
+  lastMessageAt   DateTime?
   lastMessageText String?
-  unreadCount    Int                @default(0)
+  unreadCount     Int                @default(0)
 
   // ---- Triagem (Fase 2) ----
-  botState            BotState  @default(NONE)
+  botState             BotState  @default(NONE)
   /// Início da sessão de atendimento atual (uma nova começa após um tempo sem conversa)
-  sessionStartedAt    DateTime?
-  botMessagesInSession Int      @default(0)
+  sessionStartedAt     DateTime?
+  botMessagesInSession Int       @default(0)
   /// Assunto identificado: orcamento, pedido, acompanhamento, duvida, troca, pagamento...
-  intent              String?
+  intent               String?
   /// Resumo para o atendente
-  summary             String?
-  summaryUpdatedAt    DateTime?
-  handoffAt           DateTime?
-  handoffReason       String?
+  summary              String?
+  summaryUpdatedAt     DateTime?
+  handoffAt            DateTime?
+  handoffReason        String?
   /// Dados da triagem da sessão (opção escolhida, respostas dadas, sugestões...)
-  triage              Json?
+  triage               Json?
 
-  createdAt      DateTime           @default(now())
-  updatedAt      DateTime           @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   messages Message[]
+  orders   Order[]
 
   @@unique([connectionId, contactId])
   @@index([awaitingSince])
@@ -184,4 +190,146 @@ model Setting {
   key       String   @id
   value     Json
   updatedAt DateTime @updatedAt
+}
+
+// ======================= Fase 3: catálogo, clientes e pedidos =======================
+
+model Product {
+  id                 String   @id @default(cuid())
+  name               String
+  description        String?
+  category           String?
+  sku                String?
+  /// Preço em centavos (null = sob orçamento)
+  priceCents         Int?
+  /// Grade de tamanhos (ex.: P, M, G, GG)
+  sizes              String[] @default([])
+  colors             String[] @default([])
+  /// Acréscimo em centavos por tamanho (ex.: {"GG": 500, "XG": 800})
+  sizeSurchargeCents Json?
+  /// Quantidade mínima por pedido deste produto
+  minQuantity        Int      @default(1)
+  /// Aceita personalização (estampa, bordado, logo)
+  customizable       Boolean  @default(false)
+  imageUrl           String?
+  active             Boolean  @default(true)
+  position           Int      @default(0)
+
+  // Dados fiscais (para a nota fiscal na fase 6)
+  ncm    String?
+  cfop   String?
+  /// Origem da mercadoria (0 = nacional)
+  origin Int?    @default(0)
+  unit   String  @default("UN")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items OrderItem[]
+}
+
+enum PersonType {
+  PF
+  PJ
+}
+
+model Customer {
+  id                String     @id @default(cuid())
+  name              String
+  personType        PersonType @default(PF)
+  /// CPF ou CNPJ, só dígitos
+  document          String?    @unique
+  /// Inscrição estadual (PJ)
+  stateRegistration String?
+  email             String?
+  phone             String?
+  zipCode           String?
+  street            String?
+  number            String?
+  complement        String?
+  district          String?
+  city              String?
+  state             String?
+  /// Código IBGE do município (usado na nota fiscal)
+  cityCode          String?
+  notes             String?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  contacts Contact[]
+  orders   Order[]
+}
+
+enum OrderStatus {
+  DRAFT // link enviado, cliente ainda montando
+  SUBMITTED // cliente enviou pelo link
+  CONFIRMED // confirmado pela confecção
+  IN_PRODUCTION
+  READY // pronto para entrega/retirada
+  DELIVERED
+  CANCELLED
+}
+
+enum DeliveryMethod {
+  PICKUP
+  DELIVERY
+}
+
+model Order {
+  id             String              @id @default(cuid())
+  /// Número exibido para o cliente (#1001, #1002...)
+  number         Int                 @unique @default(autoincrement())
+  /// Código secreto do link público do pedido
+  token          String              @unique
+  status         OrderStatus         @default(DRAFT)
+  customerId     String?
+  customer       Customer?           @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  conversationId String?
+  conversation   Conversation?       @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+  connectionId   String?
+  connection     WhatsAppConnection? @relation(fields: [connectionId], references: [id], onDelete: SetNull)
+  createdById    String?
+  createdBy      User?               @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  /// Dados que o cliente informou no link (antes de virar cadastro)
+  customerData   Json?
+  deliveryMethod DeliveryMethod @default(PICKUP)
+  /// Prazo desejado pelo cliente
+  desiredDate    DateTime?
+  /// Prazo combinado pela confecção
+  dueDate        DateTime?
+  customerNotes  String?
+  internalNotes  String?
+
+  discountCents Int @default(0)
+  shippingCents Int @default(0)
+  /// Total calculado (itens - desconto + frete)
+  totalCents    Int @default(0)
+
+  submittedAt DateTime?
+  confirmedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  items OrderItem[]
+
+  @@index([status])
+  @@index([conversationId])
+}
+
+model OrderItem {
+  id             String   @id @default(cuid())
+  orderId        String
+  order          Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId      String?
+  product        Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  /// Nome do produto no momento do pedido
+  description    String
+  size           String?
+  color          String?
+  quantity       Int
+  /// Preço unitário em centavos (já com acréscimo de tamanho); null = a definir
+  unitPriceCents Int?
+  customization  String?
+  position       Int      @default(0)
 }

@@ -43,11 +43,30 @@ Sistema de apoio à confecção. Ele junta os atendimentos de vários WhatsApps,
   - uma mensagem por vez.
 - Nova aba **"Em triagem"**, com as conversas em que o robô está atendendo.
 
+### Fase 3: catálogo, link de pedido e central de pedidos
+
+- **Catálogo de produtos**:
+  - preço (ou "sob orçamento"), grade de tamanhos, cores, acréscimo por tamanho (ex.: GG +R$ 5), pedido mínimo e personalização;
+  - dados fiscais (NCM, CFOP, origem) já guardados para a nota fiscal;
+  - **importação colando linhas de uma planilha**.
+- **Link de pedido**:
+  - enviado pela conversa (botão 🧾) ou pelo próprio robô (opção de menu "Envia o link de pedido");
+  - o cliente abre no celular, sem login: escolhe cor, quantidade por tamanho e personalização, e informa CPF/CNPJ e endereço (o CEP preenche o resto);
+  - o cliente pode alterar até a confirmação.
+- **Quando o cliente envia**:
+  - o cadastro do cliente é criado ou atualizado (pelo CPF/CNPJ);
+  - a equipe recebe uma notificação;
+  - o cliente recebe a confirmação no WhatsApp.
+- **Central de pedidos**:
+  - situações: rascunho → enviado → confirmado → em produção → pronto → entregue (ou cancelado);
+  - a equipe ajusta itens, preços, desconto, frete, prazo e anotações internas.
+- **Clientes**: cadastro com os dados que a nota fiscal precisa (CPF/CNPJ validado, IE, endereço, código IBGE do município).
+- Os pedidos são numerados a partir do **#1001**.
+
 ## Próximas fases
 
 | Fase | Entrega |
 |---|---|
-| 3 | Catálogo de produtos, página de pedido (link para o cliente) e central de pedidos |
 | 4 | Lembretes de atendimentos esquecidos (tempo configurável) e regras de prioridade configuráveis |
 | 5 | Relatórios e exportação para a gestão |
 | 6–7 | Nota fiscal: exportação e integração, depois emissão própria (NF-e/NFC-e) |
@@ -101,6 +120,16 @@ Esse comando simula um cliente conversando com o robô, mostra as respostas e o 
 3. No celular, abra WhatsApp → **Aparelhos conectados** → **Conectar um aparelho** e leia o QR.
 
 O sistema funciona como um "aparelho conectado" e não marca o número como online, então o celular continua recebendo as notificações.
+
+### Configurar o robô
+
+### Catálogo e link de pedido
+
+1. Em **Produtos**, cadastre os produtos ou cole linhas de uma planilha (nome · categoria · preço · tamanhos · cores · NCM).
+2. Em **Ajustes → Empresa e link de pedido**, defina o nome exibido, se os preços aparecem e o **endereço público** usado no link.
+3. Na conversa, toque em **🧾** para enviar o link.
+
+Os pedidos chegam em **Pedidos**.
 
 ### Configurar o robô
 

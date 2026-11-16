@@ -14,9 +14,10 @@ export const menuOptionSchema = z.object({
   /**
    * faq = responde dúvidas pela base;
    * collect = pede detalhes e depois passa ao atendente;
-   * handoff = passa direto ao atendente
+   * handoff = passa direto ao atendente;
+   * order = envia o link de pedido (página com o catálogo)
    */
-  action: z.enum(['faq', 'collect', 'handoff']),
+  action: z.enum(['faq', 'collect', 'handoff', 'order']),
   /** Mensagem enviada ao escolher a opção */
   prompt: z.string().default(''),
   /** Palavras que também selecionam esta opção (ex.: "orçamento") */

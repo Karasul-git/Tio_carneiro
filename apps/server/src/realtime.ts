@@ -43,3 +43,8 @@ export async function emitToConnection(connectionId: string, event: string, payl
     logger.warn({ err }, 'falha ao emitir evento em tempo real');
   }
 }
+
+/** Envia um evento só para gestores e administradores. */
+export function emitToManagers(event: string, payload: unknown) {
+  io?.to('managers').emit(event, payload);
+}

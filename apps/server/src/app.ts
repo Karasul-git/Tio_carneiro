@@ -12,6 +12,10 @@ import { connectionRoutes } from './routes/connections.js';
 import { conversationRoutes } from './routes/conversations.js';
 import { pushRoutes } from './routes/push.js';
 import { botRoutes } from './routes/bot.js';
+import { productRoutes } from './routes/products.js';
+import { customerRoutes } from './routes/customers.js';
+import { orderRoutes } from './routes/orders.js';
+import { publicRoutes } from './routes/public.js';
 import { logger } from './logger.js';
 
 export async function buildApp() {
@@ -39,6 +43,10 @@ export async function buildApp() {
   await app.register(conversationRoutes);
   await app.register(pushRoutes);
   await app.register(botRoutes);
+  await app.register(productRoutes);
+  await app.register(customerRoutes);
+  await app.register(orderRoutes);
+  await app.register(publicRoutes);
 
   // Em produção, a API também pode servir o app web já compilado.
   const webDist = config.WEB_DIST_DIR ? path.resolve(config.WEB_DIST_DIR) : '';

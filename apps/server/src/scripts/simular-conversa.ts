@@ -30,9 +30,9 @@ if (texts.length === 0) {
 let conn = await prisma.whatsAppConnection.findFirst({ where: { name: 'Simulador' } });
 conn ??= await prisma.whatsAppConnection.create({ data: { name: 'Simulador', status: 'DISCONNECTED' } });
 
-const settings = await getBotSettings();
-if (!settings.enabled) await saveBotSettings({ ...settings, enabled: true, debounceSeconds: 0.2 });
-else if (settings.debounceSeconds > 0.2) await saveBotSettings({ ...settings, debounceSeconds: 0.2 });
+// Liga o robô e encurta a espera só durante a simulação (restaura no final)
+const original = await getBotSettings();
+await saveBotSettings({ ...original, enabled: true, debounceSeconds: 0.2 });
 
 // Substitui o envio real: grava a resposta do robô como mensagem enviada
 let seq = 0;
@@ -67,5 +67,6 @@ const conv = await prisma.conversation.findFirst({
 console.log('\n──────── Estado da conversa ────────');
 console.log({ etapa: conv?.botState, assunto: conv?.intent, aguardandoDesde: conv?.awaitingSince, motivo: conv?.handoffReason });
 if (conv?.summary) console.log(`\nResumo para o atendente:\n${conv.summary}`);
+await saveBotSettings(original);
 await prisma.$disconnect();
 process.exit(0);

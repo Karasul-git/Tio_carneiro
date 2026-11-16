@@ -12,6 +12,7 @@ import { aiAvailable, summarizeWithAi, type TranscriptLine } from './llm.js';
 import { KnowledgeIndex } from './matcher.js';
 import { getBotSettings, type BotSettings } from './settings.js';
 import { buildRuleSummary } from './summary.js';
+import { sendOrderLink } from '../orders/service.js';
 
 const BOT_ACTIVE: BotStateName[] = ['NONE', 'MENU', 'COLLECTING', 'FAQ'];
 
@@ -217,6 +218,18 @@ class BotRunner {
     for (const action of result.actions) {
       if (action.type === 'handoff') handoffReason = action.reason;
       if (action.type === 'resolved') resolved = true;
+      if (action.type === 'orderLink') {
+        try {
+          await sendOrderLink(conversationId, { sender: 'BOT', template: action.text });
+          sentCount++;
+        } catch (err) {
+          logger.warn({ err, conversationId }, 'robô não conseguiu enviar o link de pedido');
+          handoffReason = 'falha ao enviar o link de pedido';
+          result.state.botState = 'HANDOFF';
+          break;
+        }
+        continue;
+      }
       if (action.type !== 'send') continue;
 
       // O atendente pode ter respondido enquanto o robô "digitava"

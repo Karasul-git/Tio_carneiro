@@ -34,7 +34,9 @@ export type Action =
   | { type: 'send'; text: string; meta?: Record<string, unknown> }
   | { type: 'handoff'; reason: string }
   /** O robô resolveu a dúvida: a conversa sai da fila de espera */
-  | { type: 'resolved' };
+  | { type: 'resolved' }
+  /** Envia o link de pedido (o texto pode conter {link}) */
+  | { type: 'orderLink'; text: string };
 
 export type EngineInput = {
   settings: BotSettings;
@@ -131,6 +133,14 @@ export function decide(input: EngineInput): EngineOutput {
     if (o.action === 'handoff') {
       if (prefix) send(prefix.trim());
       return handoff('cliente escolheu falar com atendente');
+    }
+    if (o.action === 'order') {
+      if (prefix) send(prefix.trim());
+      actions.push({ type: 'orderLink', text: o.prompt });
+      sends++;
+      actions.push({ type: 'handoff', reason: 'link de pedido enviado' });
+      state.botState = 'HANDOFF';
+      return done();
     }
     state.botState = o.action === 'faq' ? 'FAQ' : 'COLLECTING';
     send(`${prefix}${o.prompt || (o.action === 'faq' ? 'Qual é a sua dúvida?' : 'Pode me contar mais detalhes?')}`);

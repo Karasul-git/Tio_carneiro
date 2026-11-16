@@ -104,6 +104,17 @@ export default function ChatView({
     }
   };
 
+  const sendOrderLink = async () => {
+    if (!confirm('Enviar o link de pedido para este cliente?')) return;
+    setError('');
+    try {
+      const r = await api<{ number: number }>(`/conversations/${conversationId}/order-link`, { body: {} });
+      setError(`Link do pedido #${r.number} enviado ✔`);
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  };
+
   const onKey = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey && window.matchMedia('(min-width: 900px)').matches) {
       e.preventDefault();
@@ -183,6 +194,9 @@ export default function ChatView({
       <form className="composer" onSubmit={send}>
         {error && <p className="error small">{error}</p>}
         <div className="composer-row">
+          <button type="button" className="btn order-btn" onClick={sendOrderLink} title="Enviar link de pedido" aria-label="Enviar link de pedido">
+            🧾
+          </button>
           <textarea
             rows={1}
             placeholder="Digite uma mensagem"

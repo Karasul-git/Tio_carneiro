@@ -1,8 +1,16 @@
 export function formatPhone(phone: string | null | undefined) {
   if (!phone) return '';
-  const m = phone.match(/^55(\d{2})(\d{4,5})(\d{4})$/);
-  return m ? `(${m[1]}) ${m[2]}-${m[3]}` : `+${phone}`;
+  const d = phone.replace(/\D/g, '');
+  // Com DDI 55 (vindo do WhatsApp) ou só DDD + número (digitado pelo cliente)
+  const m = d.match(/^(?:55)?(\d{2})(\d{4,5})(\d{4})$/);
+  if (m && (d.length === 10 || d.length === 11 || d.startsWith('55'))) return `(${m[1]}) ${m[2]}-${m[3]}`;
+  return `+${d}`;
 }
+
+export const formatCep = (cep: string | null | undefined) => {
+  const d = (cep ?? '').replace(/\D/g, '');
+  return d.length === 8 ? `${d.slice(0, 5)}-${d.slice(5)}` : (cep ?? '');
+};
 
 export function contactName(c: { name: string | null; phone: string | null }) {
   return c.name || formatPhone(c.phone) || 'Contato';
@@ -67,3 +75,41 @@ export const botStateLabel = {
 } as const;
 
 export const isBotActive = (s: string) => s === 'MENU' || s === 'COLLECTING' || s === 'FAQ';
+
+export const formatBRL = (cents: number) =>
+  (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+/** "35", "35,9", "1.234,50", "R$ 10" → centavos; vazio → null */
+export function parseBRL(text: string): number | null {
+  const t = text.replace(/[^\d,.-]/g, '').trim();
+  if (!t) return null;
+  const normalized = t.includes(',') ? t.replace(/\./g, '').replace(',', '.') : t;
+  const n = Number(normalized);
+  return Number.isFinite(n) ? Math.round(n * 100) : null;
+}
+
+export const centsToInput = (cents: number | null | undefined) =>
+  cents == null ? '' : (cents / 100).toFixed(2).replace('.', ',');
+
+export const orderStatusLabel: Record<string, string> = {
+  DRAFT: 'Rascunho',
+  SUBMITTED: 'Enviado pelo cliente',
+  CONFIRMED: 'Confirmado',
+  IN_PRODUCTION: 'Em produção',
+  READY: 'Pronto',
+  DELIVERED: 'Entregue',
+  CANCELLED: 'Cancelado',
+};
+
+export function formatDocument(doc: string | null | undefined) {
+  const d = (doc ?? '').replace(/\D/g, '');
+  if (d.length === 11) return d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+  if (d.length === 14) return d.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+  return doc ?? '';
+}
+
+export const dateLabel = (iso: string | null | undefined) =>
+  iso ? new Date(iso).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : '';
+
+/** Para <input type="date"> */
+export const dateInput = (iso: string | null | undefined) => (iso ? iso.slice(0, 10) : '');

@@ -53,6 +53,18 @@ Antes: em **Robô → Base de respostas**, complete os trechos `[AJUSTAR: …]` 
 - [ ] Robô desligado no número (tela Números) → nenhuma mensagem automática
 - [ ] **Robô → Testar uma mensagem** → frases reais de clientes; ajuste as variantes de cada resposta até o resultado ficar bom
 
+## 2b. Catálogo e pedidos (Fase 3)
+
+- [ ] Em **Produtos**, cadastre 2 ou 3 produtos reais (ou importe da planilha)
+- [ ] Em **Ajustes → Empresa e link de pedido**, confira o nome e o **endereço público** (no teste local, use `http://IP-DO-PC:5173`)
+- [ ] Na conversa, toque em **🧾** → o cliente recebe o link no WhatsApp
+- [ ] O cliente abre o link **no celular**, escolhe tamanhos/cores, preenche CPF/CNPJ e CEP (o endereço completa sozinho) e envia
+- [ ] O cliente recebe "Recebemos seu pedido #…" no WhatsApp
+- [ ] O pedido aparece em **Pedidos → Novos**, com o cadastro do cliente criado
+- [ ] Ajuste o preço de um item "sob orçamento", coloque o frete e o prazo → **Confirmar pedido**
+- [ ] O cliente abre o link de novo → vê o pedido confirmado, sem poder alterar
+- [ ] Robô com a opção de menu "Envia o link de pedido" → o cliente escolhe a opção e recebe o link
+
 ## 3. Resumo com IA (opcional)
 
 - [ ] Coloque `ANTHROPIC_API_KEY` no `.env` do servidor e reinicie
