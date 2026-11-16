@@ -109,6 +109,17 @@ export default function ConnectionsPage() {
               </select>
             </label>
 
+            <label className="check">
+              <input
+                type="checkbox"
+                checked={c.botEnabled}
+                onChange={(e) =>
+                  run(() => api(`/connections/${c.id}`, { method: 'PATCH', body: { botEnabled: e.target.checked } }))
+                }
+              />
+              Robô de triagem ativo neste número
+            </label>
+
             <div className="actions">
               {(c.status === 'DISCONNECTED' || c.status === 'LOGGED_OUT') && (
                 <button className="btn primary" onClick={() => run(() => api(`/connections/${c.id}/start`, { body: {} }))}>

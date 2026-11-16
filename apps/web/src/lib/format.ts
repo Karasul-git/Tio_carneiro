@@ -46,3 +46,24 @@ export const statusLabel = {
   CONNECTED: 'Conectado',
   LOGGED_OUT: 'Sessão encerrada',
 } as const;
+
+export const intentLabels: Record<string, string> = {
+  orcamento: 'Orçamento',
+  pedido: 'Pedido',
+  duvida: 'Dúvida',
+  acompanhamento: 'Acompanhamento',
+  atendente: 'Quer atendente',
+  troca: 'Troca',
+  pagamento: 'Pagamento',
+};
+
+export const botStateLabel = {
+  NONE: '',
+  MENU: '🤖 No menu',
+  COLLECTING: '🤖 Coletando detalhes',
+  FAQ: '🤖 Tirando dúvidas',
+  HANDOFF: '🔔 Aguardando atendente',
+  HUMAN: '👤 Com atendente',
+} as const;
+
+export const isBotActive = (s: string) => s === 'MENU' || s === 'COLLECTING' || s === 'FAQ';

@@ -11,6 +11,7 @@ import { userRoutes } from './routes/users.js';
 import { connectionRoutes } from './routes/connections.js';
 import { conversationRoutes } from './routes/conversations.js';
 import { pushRoutes } from './routes/push.js';
+import { botRoutes } from './routes/bot.js';
 import { logger } from './logger.js';
 
 export async function buildApp() {
@@ -37,6 +38,7 @@ export async function buildApp() {
   await app.register(connectionRoutes);
   await app.register(conversationRoutes);
   await app.register(pushRoutes);
+  await app.register(botRoutes);
 
   // Em produção, a API também pode servir o app web já compilado.
   const webDist = config.WEB_DIST_DIR ? path.resolve(config.WEB_DIST_DIR) : '';

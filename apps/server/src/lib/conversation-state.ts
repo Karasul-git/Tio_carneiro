@@ -11,14 +11,22 @@ export type ConversationState = {
 export type IncomingEvent = {
   fromMe: boolean;
   timestamp: Date;
+  /** Mensagem automática do robô: não tira o cliente da fila de espera */
+  byBot?: boolean;
 };
 
 export function applyMessage(state: ConversationState, msg: IncomingEvent): ConversationState {
   const isNewest = !state.lastMessageAt || msg.timestamp >= state.lastMessageAt;
   const lastMessageAt = isNewest ? msg.timestamp : state.lastMessageAt;
 
+  if (msg.fromMe && msg.byBot) {
+    // Robô respondendo não conta como atendimento humano; quando ele resolve a dúvida,
+    // quem tira da fila é o próprio robô (ação "resolved").
+    return { ...state, lastMessageAt };
+  }
+
   if (msg.fromMe) {
-    // Qualquer resposta nossa (celular, painel ou robô) mais recente que a espera zera a fila.
+    // Resposta de uma pessoa (celular ou painel) mais recente que a espera zera a fila.
     const answers = state.awaitingSince && msg.timestamp >= state.awaitingSince;
     return {
       awaitingSince: answers ? null : state.awaitingSince,

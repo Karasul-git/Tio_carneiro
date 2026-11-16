@@ -6,6 +6,7 @@ import { connectionScope, type AuthUser } from '../auth.js';
 import { sortByPriority } from '../lib/priority.js';
 import { emitToConnection } from '../realtime.js';
 import { whatsapp } from '../whatsapp/manager.js';
+import { generateSummary } from '../bot/runner.js';
 
 const include = {
   contact: true,
@@ -26,7 +27,7 @@ export async function conversationRoutes(app: FastifyInstance) {
     const q = z
       .object({
         connectionId: z.string().optional(),
-        filter: z.enum(['awaiting', 'open', 'closed', 'all']).default('open'),
+        filter: z.enum(['awaiting', 'triage', 'open', 'closed', 'all']).default('open'),
         search: z.string().optional(),
       })
       .parse(req.query);
@@ -34,7 +35,12 @@ export async function conversationRoutes(app: FastifyInstance) {
     const where: Prisma.ConversationWhereInput = {
       connection: connectionScope(req.user),
       ...(q.connectionId ? { connectionId: q.connectionId } : {}),
-      ...(q.filter === 'awaiting' ? { awaitingSince: { not: null }, status: 'OPEN' } : {}),
+      // Aguardando atendente: cliente sem resposta e fora da triagem do robô
+      ...(q.filter === 'awaiting'
+        ? { awaitingSince: { not: null }, status: 'OPEN', botState: { in: ['NONE', 'HANDOFF', 'HUMAN'] } }
+        : {}),
+      // Em triagem: o robô está conversando com o cliente
+      ...(q.filter === 'triage' ? { status: 'OPEN', botState: { in: ['MENU', 'COLLECTING', 'FAQ'] } } : {}),
       ...(q.filter === 'open' ? { status: 'OPEN' } : {}),
       ...(q.filter === 'closed' ? { status: 'CLOSED' } : {}),
       ...(q.search
@@ -91,7 +97,10 @@ export async function conversationRoutes(app: FastifyInstance) {
     const conv = await findAccessible(req.user, id);
     if (!conv) return reply.code(404).send({ error: 'Conversa não encontrada' });
     try {
-      const waId = await whatsapp.sendText(conv.connectionId, conv.contact.jid, text, req.user.sub);
+      const waId = await whatsapp.sendText(conv.connectionId, conv.contact.jid, text, {
+        sender: 'PANEL',
+        userId: req.user.sub,
+      });
       return { ok: true, waMessageId: waId };
     } catch (err: any) {
       return reply.code(409).send({ error: err?.message ?? 'Falha ao enviar' });
@@ -120,5 +129,23 @@ export async function conversationRoutes(app: FastifyInstance) {
     });
     await emitToConnection(conv.connectionId, 'conversation:update', updated);
     return updated;
+  });
+
+  /** Atendente assume a conversa: o robô para de responder nesta sessão */
+  app.post('/api/conversations/:id/takeover', async (req, reply) => {
+    const { id } = z.object({ id: z.string() }).parse(req.params);
+    const conv = await findAccessible(req.user, id);
+    if (!conv) return reply.code(404).send({ error: 'Conversa não encontrada' });
+    const updated = await prisma.conversation.update({ where: { id }, data: { botState: 'HUMAN' }, include });
+    await emitToConnection(conv.connectionId, 'conversation:update', updated);
+    return updated;
+  });
+
+  /** Gera (ou atualiza) o resumo do atendimento */
+  app.post('/api/conversations/:id/summary', async (req, reply) => {
+    const { id } = z.object({ id: z.string() }).parse(req.params);
+    const conv = await findAccessible(req.user, id);
+    if (!conv) return reply.code(404).send({ error: 'Conversa não encontrada' });
+    return generateSummary(id);
   });
 }

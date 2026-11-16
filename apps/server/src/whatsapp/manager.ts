@@ -4,6 +4,7 @@ import makeWASocket, {
   Browsers,
   DisconnectReason,
   fetchLatestBaileysVersion,
+  generateMessageIDV2,
   isJidBroadcast,
   isJidGroup,
   jidNormalizedUser,
@@ -12,12 +13,24 @@ import makeWASocket, {
   type WASocket,
 } from 'baileys';
 import QRCode from 'qrcode';
-import type { ConnectionStatus } from '@prisma/client';
+import type { ConnectionStatus, MessageSender } from '@prisma/client';
 import { config } from '../config.js';
 import { prisma } from '../db.js';
 import { logger } from '../logger.js';
 import { emitToConnection } from '../realtime.js';
-import { ingestMessages } from './ingest.js';
+import { ingestMessages, registerOutgoing } from './ingest.js';
+import { botRunner } from '../bot/runner.js';
+
+/** Mensagens recebidas há mais tempo que isso (ex.: servidor estava desligado) não acionam o robô. */
+const BOT_MAX_MESSAGE_AGE_MS = 10 * 60_000;
+
+export type SendOptions = {
+  sender: Extract<MessageSender, 'PANEL' | 'BOT'>;
+  userId?: string;
+  meta?: Record<string, unknown>;
+  /** Mostra "digitando…" antes de enviar (usado pelo robô) */
+  typing?: boolean;
+};
 
 /** Quantos QR Codes mostrar antes de desistir (cada um vale ~20–60s). */
 const MAX_QR_ATTEMPTS = 6;
@@ -147,13 +160,27 @@ class Session {
     });
 
     sock.ev.on('messages.upsert', ({ messages, type }) => {
-      ingestMessages(this.connectionId, messages, { notify: type === 'notify' }).catch((err) =>
-        logger.error({ err }, 'falha ao processar mensagens'),
-      );
+      ingestMessages(this.connectionId, messages, { live: true })
+        .then((saved) => {
+          if (type !== 'notify') return;
+          const recent = new Set(
+            messages
+              .filter((m) => Date.now() - Number(m.messageTimestamp ?? 0) * 1000 < BOT_MAX_MESSAGE_AGE_MS)
+              .map((m) => m.key.id),
+          );
+          for (const m of saved) {
+            if (m.sender === 'CUSTOMER') {
+              botRunner.onCustomerMessage(m.conversationId, { allowBot: recent.has(m.waMessageId) });
+            } else if (m.fromMe && m.sender !== 'BOT') {
+              botRunner.cancel(m.conversationId);
+            }
+          }
+        })
+        .catch((err) => logger.error({ err }, 'falha ao processar mensagens'));
     });
 
     sock.ev.on('messaging-history.set', ({ messages }) => {
-      ingestMessages(this.connectionId, messages, { notify: false, history: true }).catch((err) =>
+      ingestMessages(this.connectionId, messages, { live: false, history: true }).catch((err) =>
         logger.error({ err }, 'falha ao processar histórico'),
       );
     });
@@ -263,18 +290,25 @@ export class WhatsAppManager {
     return this.sessions.get(id)?.status === 'CONNECTED';
   }
 
-  async sendText(connectionId: string, jid: string, text: string, userId: string) {
+  /** Envia um texto e registra no histórico com o remetente correto. */
+  async sendText(connectionId: string, jid: string, text: string, opts: SendOptions) {
     const s = this.sessions.get(connectionId);
-    if (!s?.sock || s.status !== 'CONNECTED') {
+    const sock = s?.sock;
+    if (!sock || s.status !== 'CONNECTED') {
       throw new Error('WhatsApp desconectado');
     }
-    const sent = await s.sock.sendMessage(jid, { text });
+    if (opts.typing) {
+      await sock.sendPresenceUpdate('composing', jid).catch(() => {});
+      // Pausa proporcional ao tamanho do texto, como uma pessoa digitando (1,2s a 4s)
+      await new Promise((r) => setTimeout(r, Math.min(1200 + text.length * 20, 4000)));
+      await sock.sendPresenceUpdate('paused', jid).catch(() => {});
+    }
+    const messageId = generateMessageIDV2(sock.user?.id);
+    registerOutgoing(messageId, { sender: opts.sender, sentByUserId: opts.userId, meta: opts.meta });
+    const sent = await sock.sendMessage(jid, { text }, { messageId });
     if (!sent) throw new Error('Falha ao enviar mensagem');
-    await ingestMessages(connectionId, [sent], {
-      notify: false,
-      sender: 'PANEL',
-      sentByUserId: userId,
-    });
+    // Garante o registro mesmo se o WhatsApp não devolver o eco
+    await ingestMessages(connectionId, [sent], { live: true });
     return sent.key.id;
   }
 

@@ -40,12 +40,17 @@ export async function connectionRoutes(app: FastifyInstance) {
   app.patch('/api/connections/:id', manager, async (req) => {
     const { id } = params.parse(req.params);
     const body = z
-      .object({ name: z.string().min(1).optional(), attendantId: z.string().nullish() })
+      .object({
+        name: z.string().min(1).optional(),
+        attendantId: z.string().nullish(),
+        botEnabled: z.boolean().optional(),
+      })
       .parse(req.body);
     return prisma.whatsAppConnection.update({
       where: { id },
       data: {
         ...(body.name ? { name: body.name } : {}),
+        ...(body.botEnabled !== undefined ? { botEnabled: body.botEnabled } : {}),
         ...(body.attendantId !== undefined ? { attendantId: body.attendantId } : {}),
       },
       include,

@@ -4,21 +4,43 @@ import { prisma } from '../db.js';
 import { logger } from '../logger.js';
 import { applyMessage } from '../lib/conversation-state.js';
 import { emitToConnection } from '../realtime.js';
-import { sendPushForConnection } from '../push.js';
+import { getBotSettings } from '../bot/settings.js';
 import { parseMessage, previewText, type ParsedMessage } from './parse.js';
 
 /** Mensagens do histórico mais antigas que isso não entram na fila de espera. */
 const HISTORY_AWAIT_WINDOW_MS = 24 * 60 * 60 * 1000;
 
 export type IngestOptions = {
-  /** Enviar notificação push para mensagens de clientes */
-  notify: boolean;
+  /** Mensagens ao vivo (true) ou vindas de sincronização/eco (false) */
+  live: boolean;
   /** Mensagens vindas da sincronização de histórico */
   history?: boolean;
-  /** Sobrescreve o remetente (ex.: mensagem enviada pelo painel) */
-  sender?: MessageSender;
-  sentByUserId?: string;
 };
+
+export type IngestedMessage = {
+  conversationId: string;
+  messageId: string;
+  waMessageId: string;
+  fromMe: boolean;
+  sender: MessageSender;
+};
+
+export const conversationInclude = {
+  contact: true,
+  connection: { select: { id: true, name: true } },
+} as const;
+
+/**
+ * Envios feitos pelo sistema (painel ou robô) aguardando o eco do WhatsApp.
+ * Registrar antes de enviar evita confundir o eco com uma resposta pelo celular.
+ */
+type Outgoing = { sender: MessageSender; sentByUserId?: string; meta?: Record<string, unknown> };
+const outgoing = new Map<string, Outgoing>();
+
+export function registerOutgoing(waMessageId: string, info: Outgoing) {
+  outgoing.set(waMessageId, info);
+  setTimeout(() => outgoing.delete(waMessageId), 5 * 60_000).unref?.();
+}
 
 // Fila por conexão para processar mensagens em ordem e evitar condições de corrida.
 const queues = new Map<string, Promise<unknown>>();
@@ -33,7 +55,11 @@ function enqueue<T>(connectionId: string, task: () => Promise<T>): Promise<T> {
   return next;
 }
 
-export function ingestMessages(connectionId: string, messages: WAMessage[], opts: IngestOptions) {
+export function ingestMessages(
+  connectionId: string,
+  messages: WAMessage[],
+  opts: IngestOptions,
+): Promise<IngestedMessage[]> {
   const parsed = messages
     .map((m) => {
       try {
@@ -48,11 +74,11 @@ export function ingestMessages(connectionId: string, messages: WAMessage[], opts
 
   if (parsed.length === 0) return Promise.resolve([]);
   return enqueue(connectionId, async () => {
-    const saved: string[] = [];
+    const saved: IngestedMessage[] = [];
     for (const msg of parsed) {
       try {
-        const id = await ingestOne(connectionId, msg, opts);
-        if (id) saved.push(id);
+        const result = await ingestOne(connectionId, msg, opts);
+        if (result) saved.push(result);
       } catch (err) {
         logger.error({ err, connectionId }, 'falha ao salvar mensagem');
       }
@@ -61,7 +87,11 @@ export function ingestMessages(connectionId: string, messages: WAMessage[], opts
   });
 }
 
-async function ingestOne(connectionId: string, msg: ParsedMessage, opts: IngestOptions) {
+async function ingestOne(
+  connectionId: string,
+  msg: ParsedMessage,
+  opts: IngestOptions,
+): Promise<IngestedMessage | null> {
   const contact = await prisma.contact.upsert({
     where: { connectionId_jid: { connectionId, jid: msg.jid } },
     create: { connectionId, jid: msg.jid, phone: msg.phone, name: msg.pushName },
@@ -77,7 +107,9 @@ async function ingestOne(connectionId: string, msg: ParsedMessage, opts: IngestO
     update: {},
   });
 
-  const sender: MessageSender = opts.sender ?? (msg.fromMe ? 'ATTENDANT_PHONE' : 'CUSTOMER');
+  const pending = msg.fromMe ? outgoing.get(msg.waMessageId) : undefined;
+  if (pending) outgoing.delete(msg.waMessageId);
+  const sender: MessageSender = pending?.sender ?? (msg.fromMe ? 'ATTENDANT_PHONE' : 'CUSTOMER');
 
   let message;
   try {
@@ -87,36 +119,60 @@ async function ingestOne(connectionId: string, msg: ParsedMessage, opts: IngestO
         waMessageId: msg.waMessageId,
         fromMe: msg.fromMe,
         sender,
-        sentByUserId: opts.sentByUserId,
+        sentByUserId: pending?.sentByUserId,
         type: msg.type,
         body: msg.body,
         timestamp: msg.timestamp,
+        meta: (pending?.meta as Prisma.InputJsonValue) ?? undefined,
       },
     });
   } catch (err) {
-    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
-      // Já registrada (eco do envio). Se veio do painel, corrige o remetente.
-      if (opts.sender) {
-        await prisma.message.update({
-          where: { conversationId_waMessageId: { conversationId: conversation.id, waMessageId: msg.waMessageId } },
-          data: { sender: opts.sender, sentByUserId: opts.sentByUserId },
-        });
-      }
-      return null;
-    }
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') return null;
     throw err;
   }
 
-  const next = applyMessage(conversation, { fromMe: msg.fromMe, timestamp: msg.timestamp });
-  if (
-    opts.history &&
-    next.awaitingSince &&
-    Date.now() - next.awaitingSince.getTime() > HISTORY_AWAIT_WINDOW_MS
-  ) {
+  const isBot = sender === 'BOT';
+  const isHuman = msg.fromMe && !isBot;
+  const next = applyMessage(conversation, { fromMe: msg.fromMe, timestamp: msg.timestamp, byBot: isBot });
+  if (opts.history && next.awaitingSince && Date.now() - next.awaitingSince.getTime() > HISTORY_AWAIT_WINDOW_MS) {
     next.awaitingSince = null;
     next.unreadCount = 0;
   }
   const isNewest = next.lastMessageAt?.getTime() === msg.timestamp.getTime();
+
+  // Sessão de atendimento: uma nova começa quando o cliente volta depois de um tempo
+  // sem conversa (ou com a conversa encerrada). O robô recomeça a triagem.
+  const session: Prisma.ConversationUpdateInput = {};
+  if (opts.live && !msg.fromMe && isNewest) {
+    const settings = await getBotSettings();
+    const gapMs = settings.sessionGapHours * 3600_000;
+    const prev = conversation.lastMessageAt;
+    const isNewSession =
+      !conversation.sessionStartedAt ||
+      conversation.status === 'CLOSED' ||
+      !prev ||
+      msg.timestamp.getTime() - prev.getTime() > gapMs;
+    if (isNewSession) {
+      Object.assign(session, {
+        sessionStartedAt: msg.timestamp,
+        botState: 'NONE',
+        botMessagesInSession: 0,
+        intent: null,
+        summary: null,
+        summaryUpdatedAt: null,
+        handoffAt: null,
+        handoffReason: null,
+        triage: Prisma.DbNull,
+      });
+    }
+  }
+  // Uma pessoa respondeu (celular ou painel): o robô fica quieto nesta sessão.
+  if (opts.live && isHuman && isNewest) {
+    Object.assign(session, {
+      botState: 'HUMAN',
+      ...(conversation.sessionStartedAt ? {} : { sessionStartedAt: msg.timestamp }),
+    });
+  }
 
   const updated = await prisma.conversation.update({
     where: { id: conversation.id },
@@ -127,22 +183,13 @@ async function ingestOne(connectionId: string, msg: ParsedMessage, opts: IngestO
       ...(isNewest ? { lastMessageText: previewText(msg.type, msg.body) } : {}),
       // Cliente voltou a falar: reabre a conversa
       ...(!msg.fromMe && isNewest ? { status: 'OPEN' as const } : {}),
+      ...session,
     },
-    include: { contact: true, connection: { select: { id: true, name: true } } },
+    include: conversationInclude,
   });
 
   await emitToConnection(connectionId, 'message:new', { conversationId: conversation.id, message });
   await emitToConnection(connectionId, 'conversation:update', updated);
 
-  if (opts.notify && !msg.fromMe && !opts.history) {
-    const who = contact.name || contact.phone || 'Cliente';
-    sendPushForConnection(connectionId, {
-      title: `${who} · ${updated.connection.name}`,
-      body: previewText(msg.type, msg.body),
-      url: `/conversas/${conversation.id}`,
-      tag: conversation.id,
-    }).catch((err) => logger.warn({ err }, 'falha no push'));
-  }
-
-  return message.id;
+  return { conversationId: conversation.id, messageId: message.id, waMessageId: msg.waMessageId, fromMe: msg.fromMe, sender };
 }

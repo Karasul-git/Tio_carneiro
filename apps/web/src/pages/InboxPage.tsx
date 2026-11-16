@@ -2,13 +2,14 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../lib/api';
 import { useNow, useSocketEvent } from '../lib/hooks';
-import { contactName, timeLabel, waitingLabel, waitingLevel } from '../lib/format';
+import { botStateLabel, contactName, intentLabels, isBotActive, timeLabel, waitingLabel, waitingLevel } from '../lib/format';
 import type { Connection, Conversation } from '../lib/types';
 import ChatView from '../components/ChatView';
 
-type Filter = 'awaiting' | 'open' | 'closed' | 'all';
+type Filter = 'awaiting' | 'triage' | 'open' | 'closed' | 'all';
 const filters: { id: Filter; label: string }[] = [
   { id: 'awaiting', label: 'Aguardando' },
+  { id: 'triage', label: 'Em triagem' },
   { id: 'open', label: 'Abertas' },
   { id: 'closed', label: 'Encerradas' },
   { id: 'all', label: 'Todas' },
@@ -16,7 +17,8 @@ const filters: { id: Filter; label: string }[] = [
 
 function matches(c: Conversation, filter: Filter, connectionId: string) {
   if (connectionId && c.connectionId !== connectionId) return false;
-  if (filter === 'awaiting') return c.status === 'OPEN' && Boolean(c.awaitingSince);
+  if (filter === 'awaiting') return c.status === 'OPEN' && Boolean(c.awaitingSince) && !isBotActive(c.botState);
+  if (filter === 'triage') return c.status === 'OPEN' && isBotActive(c.botState);
   if (filter === 'open') return c.status === 'OPEN';
   if (filter === 'closed') return c.status === 'CLOSED';
   return true;
@@ -76,7 +78,10 @@ export default function InboxPage() {
   );
   useSocketEvent('conversation:update', onUpdate);
 
-  const awaitingCount = useMemo(() => items.filter((c) => c.awaitingSince && c.status === 'OPEN').length, [items]);
+  const awaitingCount = useMemo(
+    () => items.filter((c) => c.awaitingSince && c.status === 'OPEN' && !isBotActive(c.botState)).length,
+    [items],
+  );
   const selected = items.find((c) => c.id === selectedId);
 
   return (
@@ -94,14 +99,12 @@ export default function InboxPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-          <div className="row gap">
-            <div className="tabs" role="tablist">
-              {filters.map((f) => (
-                <button key={f.id} role="tab" aria-selected={filter === f.id} className={`tab ${filter === f.id ? 'active' : ''}`} onClick={() => setFilter(f.id)}>
-                  {f.label}
-                </button>
-              ))}
-            </div>
+          <div className="tabs" role="tablist">
+            {filters.map((f) => (
+              <button key={f.id} role="tab" aria-selected={filter === f.id} className={`tab ${filter === f.id ? 'active' : ''}`} onClick={() => setFilter(f.id)}>
+                {f.label}
+              </button>
+            ))}
           </div>
           {connections.length > 1 && (
             <select value={connectionId} onChange={(e) => setConnectionId(e.target.value)} aria-label="Número">
@@ -118,7 +121,13 @@ export default function InboxPage() {
         <ul className="conv-list">
           {loading && <li className="empty">Carregando…</li>}
           {!loading && items.length === 0 && (
-            <li className="empty">{filter === 'awaiting' ? 'Nenhum cliente aguardando resposta 🎉' : 'Nenhuma conversa encontrada.'}</li>
+            <li className="empty">
+              {filter === 'awaiting'
+                ? 'Nenhum cliente aguardando resposta 🎉'
+                : filter === 'triage'
+                  ? 'Nenhum cliente conversando com o robô agora.'
+                  : 'Nenhuma conversa encontrada.'}
+            </li>
           )}
           {items.map((c) => {
             const level = waitingLevel(c.awaitingSince, now);
@@ -139,7 +148,9 @@ export default function InboxPage() {
                     </div>
                     <div className="conv-meta">
                       <span className="tag">{c.connection.name}</span>
-                      {c.awaitingSince && c.status === 'OPEN' && (
+                      {c.intent && <span className="tag intent">{intentLabels[c.intent] ?? c.intent}</span>}
+                      {isBotActive(c.botState) && <span className="tag bot">{botStateLabel[c.botState]}</span>}
+                      {c.awaitingSince && c.status === 'OPEN' && !isBotActive(c.botState) && (
                         <span className={`wait ${level}`} title="Tempo esperando resposta">
                           ⏱ {waitingLabel(c.awaitingSince, now)}
                         </span>

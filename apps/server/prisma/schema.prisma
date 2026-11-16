@@ -28,6 +28,16 @@ enum ConversationStatus {
 }
 
 /// Quem originou a mensagem
+/// Etapa do robô de triagem na conversa
+enum BotState {
+  NONE // robô ainda não atuou nesta sessão
+  MENU // aguardando escolha no menu
+  COLLECTING // coletando detalhes (ex.: orçamento) antes de passar ao atendente
+  FAQ // respondendo dúvidas pela base de respostas
+  HANDOFF // passou para um humano, aguardando o atendente
+  HUMAN // atendente assumiu; robô fica quieto até a próxima sessão
+}
+
 enum MessageSender {
   CUSTOMER // cliente
   ATTENDANT_PHONE // atendente pelo celular (WhatsApp do aparelho)
@@ -59,6 +69,8 @@ model WhatsAppConnection {
   attendant   User?            @relation(fields: [attendantId], references: [id], onDelete: SetNull)
   lastError   String?
   connectedAt DateTime?
+  /// Robô de triagem ligado para este número (além da chave geral)
+  botEnabled  Boolean          @default(true)
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
 
@@ -94,6 +106,22 @@ model Conversation {
   lastMessageAt  DateTime?
   lastMessageText String?
   unreadCount    Int                @default(0)
+
+  // ---- Triagem (Fase 2) ----
+  botState            BotState  @default(NONE)
+  /// Início da sessão de atendimento atual (uma nova começa após um tempo sem conversa)
+  sessionStartedAt    DateTime?
+  botMessagesInSession Int      @default(0)
+  /// Assunto identificado: orcamento, pedido, acompanhamento, duvida, troca, pagamento...
+  intent              String?
+  /// Resumo para o atendente
+  summary             String?
+  summaryUpdatedAt    DateTime?
+  handoffAt           DateTime?
+  handoffReason       String?
+  /// Dados da triagem da sessão (opção escolhida, respostas dadas, sugestões...)
+  triage              Json?
+
   createdAt      DateTime           @default(now())
   updatedAt      DateTime           @updatedAt
 
@@ -116,6 +144,8 @@ model Message {
   sentByUser     User?         @relation(fields: [sentByUserId], references: [id], onDelete: SetNull)
   type           String // text, image, audio, video, document, sticker, location, contact, other
   body           String?
+  /// Informações extras (ex.: resposta da base usada pelo robô e a confiança)
+  meta           Json?
   timestamp      DateTime
   createdAt      DateTime      @default(now())
 
@@ -131,6 +161,22 @@ model PushSubscription {
   p256dh    String
   auth      String
   createdAt DateTime @default(now())
+}
+
+/// Base de respostas (perguntas frequentes, tabelas, prazos...) usada pelo robô
+model KnowledgeItem {
+  id        String   @id @default(cuid())
+  /// Pergunta principal, como o cliente costuma escrever
+  question  String
+  /// Outras formas de perguntar / palavras-chave (uma por item)
+  variants  String[] @default([])
+  answer    String
+  category  String?
+  active    Boolean  @default(true)
+  /// Quantas vezes o robô usou esta resposta
+  hits      Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 /// Configurações gerais do sistema (chave/valor)

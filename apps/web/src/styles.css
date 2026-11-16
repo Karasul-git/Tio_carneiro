@@ -623,3 +623,170 @@ label {
     display: none;
   }
 }
+
+/* ---------- Fase 2: robô, resumo e base de respostas ---------- */
+.stack {
+  display: grid;
+  gap: 12px;
+}
+.tag.intent {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+.tag.bot {
+  background: var(--warn-soft);
+  color: var(--warn);
+}
+.check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text);
+  font-size: 0.92rem;
+}
+.check input {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  accent-color: var(--primary);
+}
+.check.big {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+label.inline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--text);
+}
+label.inline span {
+  flex: 1;
+}
+label.inline input {
+  width: min(220px, 55%);
+}
+input[type='range'] {
+  padding: 0;
+  accent-color: var(--primary);
+}
+.summary {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 8px 16px 12px;
+  display: grid;
+  gap: 8px;
+  max-height: 40vh;
+  overflow-y: auto;
+}
+.summary.compact {
+  padding: 6px 16px;
+  justify-items: end;
+}
+.summary-toggle {
+  font: inherit;
+  font-weight: 700;
+  background: none;
+  border: 0;
+  color: inherit;
+  padding: 4px 0;
+  cursor: pointer;
+  text-align: left;
+}
+.summary-text {
+  white-space: pre-wrap;
+  margin: 0;
+  font-size: 0.92rem;
+}
+.suggestion {
+  border: 1px dashed var(--primary);
+  border-radius: 10px;
+  padding: 10px;
+  display: grid;
+  gap: 6px;
+  background: var(--primary-soft);
+}
+.suggestion p {
+  margin: 0;
+  white-space: pre-wrap;
+}
+.decision {
+  font-weight: 600;
+  margin: 0;
+}
+.match {
+  display: grid;
+  gap: 4px;
+  padding: 8px 0;
+  border-top: 1px solid var(--border);
+}
+.meter {
+  position: relative;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.meter span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--primary);
+  border-radius: 999px;
+}
+.meter i {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--text);
+  opacity: 0.35;
+}
+.pill {
+  background: var(--surface-2);
+}
+.kb-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.kb {
+  display: grid;
+  gap: 6px;
+}
+.kb p {
+  margin: 0;
+  white-space: pre-wrap;
+}
+.kb.inactive {
+  opacity: 0.6;
+}
+.menu-option {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+}
+.menu-option .key {
+  width: 56px;
+  text-align: center;
+}
+.save-bar {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  background: var(--bg);
+}
+.inbox-header > *,
+.tabs {
+  min-width: 0;
+  max-width: 100%;
+}
+.inbox-list {
+  min-width: 0;
+}

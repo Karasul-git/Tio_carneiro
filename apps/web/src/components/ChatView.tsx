@@ -3,6 +3,7 @@ import { api } from '../lib/api';
 import { useNow, useSocketEvent } from '../lib/hooks';
 import { contactName, formatPhone, waitingLabel, waitingLevel } from '../lib/format';
 import type { Conversation, Message } from '../lib/types';
+import SummaryPanel from './SummaryPanel';
 
 const senderLabel: Record<Message['sender'], string> = {
   CUSTOMER: '',
@@ -128,7 +129,7 @@ export default function ChatView({
             {conv && formatPhone(conv.contact.phone)} {conv && `· ${conv.connection.name}`}
           </span>
         </div>
-        {conv?.awaitingSince && conv.status === 'OPEN' && (
+        {conv?.awaitingSince && conv.status === 'OPEN' && conv.botState !== 'MENU' && conv.botState !== 'COLLECTING' && conv.botState !== 'FAQ' && (
           <span className={`wait ${waitingLevel(conv.awaitingSince, now)} small`}>⏱ {waitingLabel(conv.awaitingSince, now)}</span>
         )}
         {conv &&
@@ -142,6 +143,8 @@ export default function ChatView({
             </button>
           ))}
       </header>
+
+      {conv && <SummaryPanel conv={conv} onChange={setConv} onUseSuggestion={(t) => setText(t)} />}
 
       <div
         className="messages"

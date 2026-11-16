@@ -5,3 +5,4 @@ dist/
 apps/server/sessions/
 apps/server/src/generated/
 *.tsbuildinfo
+deploy/.env.prod
