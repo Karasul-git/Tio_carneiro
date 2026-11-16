@@ -4,3 +4,4 @@ dist/
 *.log
 apps/server/sessions/
 apps/server/src/generated/
+*.tsbuildinfo
