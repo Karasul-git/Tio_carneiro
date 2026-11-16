@@ -1,0 +1,141 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  GESTOR
+  ATENDENTE
+}
+
+/// Status da conexão de um número de WhatsApp
+enum ConnectionStatus {
+  DISCONNECTED // parado / nunca conectado
+  CONNECTING // abrindo conexão
+  QR // aguardando leitura do QR Code
+  CONNECTED // online
+  LOGGED_OUT // sessão encerrada no celular, precisa de novo QR
+}
+
+enum ConversationStatus {
+  OPEN
+  CLOSED
+}
+
+/// Quem originou a mensagem
+enum MessageSender {
+  CUSTOMER // cliente
+  ATTENDANT_PHONE // atendente pelo celular (WhatsApp do aparelho)
+  PANEL // enviada pelo painel/app
+  BOT // robô (fase 2)
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(ATENDENTE)
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  connections       WhatsAppConnection[]
+  pushSubscriptions PushSubscription[]
+  sentMessages      Message[]
+}
+
+model WhatsAppConnection {
+  id          String           @id @default(cuid())
+  name        String // ex.: "Maria - Vendas"
+  phone       String? // preenchido ao conectar
+  status      ConnectionStatus @default(DISCONNECTED)
+  attendantId String?
+  attendant   User?            @relation(fields: [attendantId], references: [id], onDelete: SetNull)
+  lastError   String?
+  connectedAt DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  contacts      Contact[]
+  conversations Conversation[]
+}
+
+model Contact {
+  id           String             @id @default(cuid())
+  connectionId String
+  connection   WhatsAppConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  /// JID usado para enviar mensagens (pode ser @s.whatsapp.net ou @lid)
+  jid          String
+  phone        String?
+  name         String?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  conversations Conversation[]
+
+  @@unique([connectionId, jid])
+}
+
+model Conversation {
+  id             String             @id @default(cuid())
+  connectionId   String
+  connection     WhatsAppConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  contactId      String
+  contact        Contact            @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  status         ConversationStatus @default(OPEN)
+  /// Momento da mensagem mais antiga do cliente ainda sem resposta (null = respondida)
+  awaitingSince  DateTime?
+  lastMessageAt  DateTime?
+  lastMessageText String?
+  unreadCount    Int                @default(0)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  messages Message[]
+
+  @@unique([connectionId, contactId])
+  @@index([awaitingSince])
+  @@index([lastMessageAt])
+}
+
+model Message {
+  id             String        @id @default(cuid())
+  conversationId String
+  conversation   Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  /// ID da mensagem no WhatsApp
+  waMessageId    String
+  fromMe         Boolean
+  sender         MessageSender
+  sentByUserId   String?
+  sentByUser     User?         @relation(fields: [sentByUserId], references: [id], onDelete: SetNull)
+  type           String // text, image, audio, video, document, sticker, location, contact, other
+  body           String?
+  timestamp      DateTime
+  createdAt      DateTime      @default(now())
+
+  @@unique([conversationId, waMessageId])
+  @@index([conversationId, timestamp])
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+}
+
+/// Configurações gerais do sistema (chave/valor)
+model Setting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+}

@@ -20,6 +20,7 @@ Juntar em um só lugar os atendimentos de **até 5 WhatsApps** da confecção, c
 | Lembrete de esquecidos | **Tempo configurável** |
 | Avaliação de atendimento | **Fica para depois** |
 | Plataforma | **Web + celular** (gestão acessa e extrai dados pelo celular) |
+| Resumo para o atendente | **Notificação push no app** (PWA) |
 
 ---
 
@@ -104,7 +105,7 @@ Juntar em um só lugar os atendimentos de **até 5 WhatsApps** da confecção, c
 - **WhatsApp**: Baileys (conexão direta, sem navegador e leve) ou **Evolution API** (já pronta para vários números, com REST e webhooks). Fica por trás de uma interface própria, para trocar pela API oficial depois.
 - **Banco**: PostgreSQL + pgvector, para a busca por similaridade na base de FAQ.
 - **Filas e agendamentos**: Redis + BullMQ (lembretes, envio de mensagens, reconexões).
-- **Frontend**: Next.js como **PWA**: um só código para web e celular, instalável e com notificações push. App nativo (React Native/Expo) só se for realmente necessário.
+- **Frontend**: React (Vite) como **PWA**: um só código para web e celular, instalável e com notificações push. App nativo (React Native/Expo) só se for realmente necessário.
 - **Triagem**:
   - v1: busca por palavras-chave + similaridade semântica com nota de confiança;
   - v2: um LLM para resumos e para entender melhor o cliente.
@@ -122,7 +123,7 @@ Juntar em um só lugar os atendimentos de **até 5 WhatsApps** da confecção, c
    - (a) por **notificação push do app**;
    - (b) como **nota no próprio chat** (não visível ao cliente, só no painel);
    - (c) por um **número "sistema"**, que manda o resumo no WhatsApp pessoal do atendente.
-   - **A definir.**
+   - **Decidido: (a) notificação push no app.**
 4. **Emissão de nota fiscal**: a SEFAZ oferece **webservices gratuitos** para autorizar NF-e (modelo 55) e NFC-e (modelo 65), mas eles exigem:
    - **certificado digital A1** da empresa (pago, renovação anual);
    - inscrição estadual e credenciamento como emissor na SEFAZ do estado;
@@ -154,7 +155,7 @@ Juntar em um só lugar os atendimentos de **até 5 WhatsApps** da confecção, c
 
 ## 7. Pendências
 
-- [ ] Como o resumo da triagem chega ao atendente (push, nota no painel ou número "sistema")
+- [x] Como o resumo da triagem chega ao atendente → **notificação push no app**
 - [ ] Qual sistema de nota fiscal o cliente usa (ou se a emissão própria será o caminho)
 - [ ] Levantamento do catálogo inicial de produtos
 - [ ] Onde hospedar (VPS própria ou nuvem) e orçamento mensal
