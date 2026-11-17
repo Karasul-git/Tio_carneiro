@@ -146,8 +146,8 @@ Juntar em um só lugar os atendimentos de **até 5 WhatsApps** da confecção, c
 | **2** | Robô de triagem + base de FAQ com confiança + resumo + pausa do robô | ✅ Código pronto (falta testar com celular real) |
 | **3** | Catálogo de produtos + página de pedido + central de pedidos + cadastro de clientes | ✅ Código pronto (falta testar com celular real) |
 | **4** | Fila por prioridade (tempo de espera) + lembretes configuráveis + motor de regras | ✅ Código pronto (falta testar com celular real) |
-| **5** | Relatórios e exportação para a gestão | Próxima |
-| **6** | Exportação para nota + integração com o emissor do cliente | — |
+| **5** | Relatórios e exportação para a gestão | ✅ Código pronto (falta testar com dados reais) |
+| **6** | Exportação para nota + integração com o emissor do cliente | Próxima (a planilha de Itens já traz NCM/CFOP) |
 | **7** | Emissão própria de NF-e/NFC-e (SEFAZ) | — |
 | **Futuro** | Avaliação de atendimento, prioridade por recorrência/valor/sentimento, API oficial do WhatsApp | — |
 

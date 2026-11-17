@@ -17,6 +17,7 @@ import { customerRoutes } from './routes/customers.js';
 import { orderRoutes } from './routes/orders.js';
 import { publicRoutes } from './routes/public.js';
 import { queueRoutes } from './routes/queue.js';
+import { reportRoutes } from './routes/reports.js';
 import { logger } from './logger.js';
 
 export async function buildApp() {
@@ -49,6 +50,7 @@ export async function buildApp() {
   await app.register(orderRoutes);
   await app.register(publicRoutes);
   await app.register(queueRoutes);
+  await app.register(reportRoutes);
 
   // Em produção, a API também pode servir o app web já compilado.
   const webDist = config.WEB_DIST_DIR ? path.resolve(config.WEB_DIST_DIR) : '';

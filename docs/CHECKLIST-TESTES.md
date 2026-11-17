@@ -79,6 +79,15 @@ Notificações ativadas no celular (passo 5) ajudam aqui. Para testar rápido, e
 - [ ] Pedido confirmado com prazo para amanhã → aviso de "vence em 1 dia"
 - [ ] Fora do horário de atendimento → nenhum aviso de conversa (com a opção ligada)
 
+## 2d. Relatórios (Fase 5)
+
+- [ ] Depois de alguns atendimentos e pedidos reais, abra **Relatórios** no celular
+- [ ] Os números batem com o que aconteceu (conversas do dia, pedidos confirmados, faturamento)
+- [ ] O tempo de resposta faz sentido (responda um cliente de teste depois de ~5 min e confira)
+- [ ] Toque numa barra do gráfico → aparece o valor do dia
+- [ ] **⬇ Excel** no celular → abre o compartilhar; no computador → baixa a planilha
+- [ ] A planilha abre no Excel/Google Planilhas com as abas Resumo, Pedidos, Itens, Clientes e Atendimentos
+
 ## 3. Resumo com IA (opcional)
 
 - [ ] Coloque `ANTHROPIC_API_KEY` no `.env` do servidor e reinicie

@@ -80,6 +80,28 @@ Sistema de apoio à confecção. Ele junta os atendimentos de vários WhatsApps,
 - Na conversa: **✓ Não precisa responder** (ex.: o cliente só agradeceu) e **⏰ Adiar lembrete** (30 min, 1 h, 3 h, amanhã).
 - O robô passa **direto ao atendente** quando o cliente chega irritado, sem passar pelo menu.
 
+### Fase 5: relatórios e exportação
+
+- **Relatórios para a gestão**, pensados para o celular (barra inferior → Relatórios):
+  - período: hoje, 7 dias, 30 dias, este mês, mês passado ou datas livres;
+  - filtro por número.
+- **Atendimento**:
+  - conversas e mensagens;
+  - tempo de resposta (mediana e média) e % respondidas em até 15 min;
+  - clientes esperando agora;
+  - resolvidas pelo robô × passadas ao atendente;
+  - assuntos.
+- **Vendas**:
+  - faturamento dos pedidos confirmados, ticket médio e peças;
+  - links de pedido → pedidos enviados;
+  - pedidos em andamento;
+  - produtos mais vendidos.
+- **Por número/atendente**: conversas, tempo de resposta, pedidos e faturamento.
+- Gráficos por dia (conversas e faturamento): tocar na barra mostra o valor, e há opção "ver tabela".
+- **⬇ Excel**: planilha com as abas Resumo, Pedidos, Itens (com NCM/CFOP, útil para a nota), Clientes e Atendimentos. No celular, abre o menu de compartilhar (WhatsApp, e-mail, Drive).
+
+O **tempo de resposta** vai da primeira mensagem do cliente até a resposta de uma pessoa (celular ou app); mensagens do robô não contam.
+
 ## Próximas fases
 
 | Fase | Entrega |

@@ -1,4 +1,6 @@
 :root {
+  /* Cor dos gráficos: validada (faixa de luminosidade, croma e contraste) nos modos claro e escuro */
+  --chart-1: #0d9488;
   --bg: #f6f7f9;
   --surface: #ffffff;
   --surface-2: #f0f2f5;
@@ -1143,4 +1145,157 @@ a.link {
   gap: 8px;
   padding: 10px 0;
   border-top: 1px solid var(--border);
+}
+
+/* ---------- Fase 5: relatórios ---------- */
+.filters {
+  display: grid;
+  gap: 8px;
+}
+.filters input[type='date'],
+.filters select {
+  width: auto;
+  flex: 1;
+  min-width: 140px;
+}
+.stats {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(min(160px, 45%), 1fr));
+}
+.stat {
+  display: grid;
+  gap: 2px;
+  padding: 12px 14px;
+}
+.stat-value {
+  font-size: 1.45rem;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+.chart {
+  margin: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+.chart-plot {
+  position: relative;
+}
+.chart-plot svg {
+  width: 100%;
+  display: block;
+  overflow: visible;
+}
+.chart .grid {
+  stroke: var(--border);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.chart .axis {
+  stroke: var(--muted);
+  stroke-width: 1;
+  opacity: 0.5;
+  vector-effect: non-scaling-stroke;
+}
+.chart .bar {
+  fill: var(--chart-1);
+}
+.chart .bar.on {
+  fill: var(--chart-1);
+  opacity: 0.8;
+  stroke: var(--text);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.chart-y {
+  position: absolute;
+  left: 4px;
+  font-size: 0.7rem;
+  color: var(--muted);
+  pointer-events: none;
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+  padding: 0 2px;
+  border-radius: 4px;
+}
+.chart-x {
+  display: flex;
+  font-size: 0.68rem;
+  color: var(--muted);
+  padding: 0 4px;
+}
+.chart-x span {
+  flex: 1 1 0;
+  min-width: 0;
+  text-align: center;
+  white-space: nowrap;
+  overflow: visible;
+}
+.page > *,
+.chart,
+.stack > * {
+  min-width: 0;
+}
+.chart-tip {
+  position: absolute;
+  top: 0;
+  display: grid;
+  gap: 0;
+  padding: 6px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgb(0 0 0 / 0.12);
+  pointer-events: none;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.table-wrap {
+  overflow-x: auto;
+  max-width: 100%;
+}
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  font-variant-numeric: tabular-nums;
+}
+.data-table th,
+.data-table td {
+  padding: 8px 6px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+.data-table th {
+  font-size: 0.75rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+.data-table .num {
+  text-align: right;
+  white-space: nowrap;
+}
+.rank {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.rank-track {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  margin-top: 4px;
+  overflow: hidden;
+}
+.rank-track span {
+  display: block;
+  height: 100%;
+  background: var(--chart-1);
+  border-radius: 0 4px 4px 0;
+}
+.align-start {
+  align-items: start;
 }
