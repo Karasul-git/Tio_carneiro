@@ -24,11 +24,15 @@ function matches(c: Conversation, filter: Filter, connectionId: string) {
   return true;
 }
 
-/** Mesma ordem do servidor: quem espera há mais tempo primeiro. */
+/** Mesma ordem do servidor: maior prioridade primeiro (empate: quem espera há mais tempo). */
 function sortConversations(list: Conversation[]) {
   return [...list].sort((a, b) => {
     if (Boolean(a.awaitingSince) !== Boolean(b.awaitingSince)) return a.awaitingSince ? -1 : 1;
-    if (a.awaitingSince && b.awaitingSince) return a.awaitingSince.localeCompare(b.awaitingSince);
+    if (a.awaitingSince && b.awaitingSince) {
+      const diff = (b.priority?.score ?? 0) - (a.priority?.score ?? 0);
+      if (Math.abs(diff) > 1e-9) return diff;
+      return a.awaitingSince.localeCompare(b.awaitingSince);
+    }
     return (b.lastMessageAt ?? '').localeCompare(a.lastMessageAt ?? '');
   });
 }
@@ -60,6 +64,12 @@ export default function InboxPage() {
     return () => clearTimeout(t);
   }, [load, search]);
 
+  // Recalcula a fila a cada minuto (o tempo de espera muda a prioridade)
+  useEffect(() => {
+    const t = setInterval(load, 60_000);
+    return () => clearInterval(t);
+  }, [load]);
+
   useEffect(() => {
     api<Connection[]>('/connections').then(setConnections).catch(() => {});
   }, []);
@@ -67,6 +77,9 @@ export default function InboxPage() {
   const onUpdate = useCallback(
     (conv: Conversation) => {
       setItems((prev) => {
+        // A prioridade é calculada na lista; mantém a anterior até a próxima atualização
+        const before = prev.find((c) => c.id === conv.id);
+        conv = { ...conv, priority: conv.priority ?? before?.priority };
         const rest = prev.filter((c) => c.id !== conv.id);
         if (!matches(conv, filter, connectionId) || search.trim()) {
           return search.trim() && prev.some((c) => c.id === conv.id) ? sortConversations([...rest, conv]) : rest;
@@ -156,6 +169,11 @@ export default function InboxPage() {
                         </span>
                       )}
                       {c.status === 'CLOSED' && <span className="tag">Encerrada</span>}
+                      {c.unhappy && <span className="tag flag" title="Cliente parece insatisfeito">😠</span>}
+                      {c.urgent && <span className="tag flag" title="Cliente com pressa">⚡</span>}
+                      {c.priority?.reasons.includes('recurring') && <span className="tag flag" title="Cliente recorrente">⭐</span>}
+                      {c.priority?.reasons.includes('bigCustomer') && <span className="tag flag" title="Cliente que compra muito">💰</span>}
+                      {c.snoozedUntil && new Date(c.snoozedUntil).getTime() > now && <span className="tag" title="Lembrete adiado">💤</span>}
                     </div>
                   </div>
                 </Link>

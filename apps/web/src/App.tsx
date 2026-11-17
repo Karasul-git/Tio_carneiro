@@ -12,6 +12,7 @@ import ProductsPage from './pages/ProductsPage';
 import { CustomerDetailPage, CustomersPage } from './pages/CustomersPage';
 import PublicOrderPage from './pages/PublicOrderPage';
 import MorePage from './pages/MorePage';
+import QueuePage from './pages/QueuePage';
 
 export function Icon({ d }: { d: string }) {
   return (
@@ -31,6 +32,7 @@ export const icons = {
   team: 'M16 19v-1a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v1M9 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM22 19v-1a4 4 0 0 0-3-3.9M16 4.1a3 3 0 0 1 0 5.8',
   gear: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z',
   more: 'M5 12h.01M12 12h.01M19 12h.01',
+  bell: 'M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0',
 };
 
 export type NavEntry = { to: string; label: string; icon: keyof typeof icons; manager?: boolean; primary?: boolean };
@@ -43,6 +45,7 @@ export const NAV: NavEntry[] = [
   { to: '/clientes', label: 'Clientes', icon: 'customers' },
   { to: '/conexoes', label: 'Números', icon: 'phone', manager: true },
   { to: '/robo', label: 'Robô', icon: 'bot', manager: true },
+  { to: '/fila', label: 'Fila e lembretes', icon: 'bell', manager: true },
   { to: '/equipe', label: 'Equipe', icon: 'team', manager: true },
   { to: '/ajustes', label: 'Ajustes', icon: 'gear' },
 ];
@@ -99,6 +102,7 @@ export default function App() {
           {isManager && <Route path="/conexoes" element={<ConnectionsPage />} />}
           {isManager && <Route path="/equipe" element={<TeamPage />} />}
           {isManager && <Route path="/robo" element={<BotPage />} />}
+          {isManager && <Route path="/fila" element={<QueuePage />} />}
           <Route path="/ajustes" element={<SettingsPage />} />
           <Route path="/mais" element={<MorePage entries={entries.filter((n) => !n.primary)} />} />
           <Route path="*" element={<Navigate to="/" replace />} />

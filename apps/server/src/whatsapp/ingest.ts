@@ -5,6 +5,7 @@ import { logger } from '../logger.js';
 import { applyMessage } from '../lib/conversation-state.js';
 import { emitToConnection } from '../realtime.js';
 import { getBotSettings } from '../bot/settings.js';
+import { extractDetails } from '../bot/summary.js';
 import { parseMessage, previewText, type ParsedMessage } from './parse.js';
 
 /** Mensagens do histórico mais antigas que isso não entram na fila de espera. */
@@ -174,9 +175,20 @@ async function ingestOne(
     });
   }
 
+  // Sinais de prioridade: valem enquanto o cliente espera resposta
+  const signals: Prisma.ConversationUpdateInput = {};
+  if (!next.awaitingSince) {
+    if (conversation.unhappy || conversation.urgent) Object.assign(signals, { unhappy: false, urgent: false });
+  } else if (!msg.fromMe && msg.body && opts.live) {
+    const d = extractDetails([msg.body]);
+    if (d.unhappy && !conversation.unhappy) signals.unhappy = true;
+    if (d.urgent && !conversation.urgent) signals.urgent = true;
+  }
+
   const updated = await prisma.conversation.update({
     where: { id: conversation.id },
     data: {
+      ...signals,
       awaitingSince: next.awaitingSince,
       lastMessageAt: next.lastMessageAt,
       unreadCount: next.unreadCount,

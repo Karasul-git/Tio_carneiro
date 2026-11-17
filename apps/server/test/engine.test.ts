@@ -141,3 +141,17 @@ describe('opção de menu que envia o link de pedido', () => {
     expect(r.state.botMessagesInSession).toBe(1);
   });
 });
+
+describe('palavras-chave e cliente insatisfeito', () => {
+  it('a palavra-chave mais específica vence', () => {
+    expect(pickOption(settings, 'quero saber do meu pedido', true)?.intent).toBe('acompanhamento');
+    expect(pickOption(settings, 'quero fazer um pedido', true)?.intent).toBe('orcamento');
+  });
+
+  it('cliente irritado vai direto para o atendente, com o assunto', () => {
+    const r = decide({ settings, state: fresh, text: 'Que absurdo, ninguém responde!!! Meu pedido atrasou', contactName: null, isOpen: true, search: () => [] });
+    expect(r.state.botState).toBe('HANDOFF');
+    expect(r.state.intent).toBe('acompanhamento');
+    expect(r.actions).toContainEqual({ type: 'handoff', reason: 'cliente parece insatisfeito' });
+  });
+});

@@ -4,6 +4,7 @@ import { useNow, useSocketEvent } from '../lib/hooks';
 import { contactName, formatPhone, waitingLabel, waitingLevel } from '../lib/format';
 import type { Conversation, Message } from '../lib/types';
 import SummaryPanel from './SummaryPanel';
+import WaitActions from './WaitActions';
 
 const senderLabel: Record<Message['sender'], string> = {
   CUSTOMER: '',
@@ -155,6 +156,7 @@ export default function ChatView({
           ))}
       </header>
 
+      {conv && <WaitActions conv={conv} onChange={setConv} />}
       {conv && <SummaryPanel conv={conv} onChange={setConv} onUseSuggestion={(t) => setText(t)} />}
 
       <div

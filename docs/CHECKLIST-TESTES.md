@@ -65,6 +65,20 @@ Antes: em **Robô → Base de respostas**, complete os trechos `[AJUSTAR: …]` 
 - [ ] O cliente abre o link de novo → vê o pedido confirmado, sem poder alterar
 - [ ] Robô com a opção de menu "Envia o link de pedido" → o cliente escolhe a opção e recebe o link
 
+## 2c. Fila e lembretes (Fase 4)
+
+Notificações ativadas no celular (passo 5) ajudam aqui. Para testar rápido, em **Mais → Fila e lembretes** coloque o primeiro aviso em 2 min e a repetição em 5 min.
+
+- [ ] Cliente manda mensagem e ninguém responde → o aviso "⏰ … espera resposta" chega no tempo configurado
+- [ ] Sem resposta → o aviso se repete; a partir do 2º, a gestão também recebe
+- [ ] Responder pelo celular → os avisos param
+- [ ] **⏰ Adiar lembrete** → nenhum aviso até o fim do adiamento
+- [ ] **✓ Não precisa responder** → a conversa sai de "Aguardando"
+- [ ] Com o peso de "cliente insatisfeito" ligado, um cliente escreve "que absurdo, ninguém responde!!!" → aparece com 😠 no topo da fila
+- [ ] Pedido enviado pelo link e não confirmado → aviso depois do tempo configurado
+- [ ] Pedido confirmado com prazo para amanhã → aviso de "vence em 1 dia"
+- [ ] Fora do horário de atendimento → nenhum aviso de conversa (com a opção ligada)
+
 ## 3. Resumo com IA (opcional)
 
 - [ ] Coloque `ANTHROPIC_API_KEY` no `.env` do servidor e reinicie

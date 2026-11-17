@@ -35,6 +35,37 @@ export type Conversation = {
   handoffAt: string | null;
   handoffReason: string | null;
   triage: Triage | null;
+  unhappy: boolean;
+  urgent: boolean;
+  remindersSent: number;
+  snoozedUntil: string | null;
+  /** Calculado pela API na lista de conversas */
+  priority?: { score: number; reasons: PriorityReason[] };
+};
+
+export type PriorityReason = 'waiting' | 'unhappy' | 'urgent' | 'recurring' | 'bigCustomer';
+
+export type QueueSettings = {
+  reminders: {
+    enabled: boolean;
+    firstAfterMinutes: number;
+    repeatEveryMinutes: number;
+    maxReminders: number;
+    escalateToManagersAt: number;
+    onlyBusinessHours: boolean;
+    triageStuckMinutes: number;
+  };
+  orderReminders: { enabled: boolean; submittedHours: number; dueSoonDays: number };
+  priority: {
+    waitingWeight: number;
+    waitingCapMinutes: number;
+    unhappyWeight: number;
+    urgentWeight: number;
+    recurringWeight: number;
+    recurringMinOrders: number;
+    bigCustomerWeight: number;
+    bigCustomerMinCents: number;
+  };
 };
 
 export type BotState = 'NONE' | 'MENU' | 'COLLECTING' | 'FAQ' | 'HANDOFF' | 'HUMAN';

@@ -63,11 +63,27 @@ Sistema de apoio à confecção. Ele junta os atendimentos de vários WhatsApps,
 - **Clientes**: cadastro com os dados que a nota fiscal precisa (CPF/CNPJ validado, IE, endereço, código IBGE do município).
 - Os pedidos são numerados a partir do **#1001**.
 
+### Fase 4: fila e lembretes
+
+- **Lembretes de atendimento esquecido**, por notificação push. Tudo é configurável em **Mais → Fila e lembretes**:
+  - primeiro aviso após X minutos, repetição a cada Y minutos e máximo de avisos;
+  - aviso também à gestão a partir do 2º lembrete;
+  - só dentro do horário de atendimento.
+  - Os avisos são agrupados por pessoa ("3 clientes esperando resposta"), para não virar uma enxurrada.
+- **Lembretes de pedidos**: pedido enviado e não confirmado após X horas, e prazo chegando ou atrasado (no máximo um aviso por dia).
+- **Prioridade configurável**: o padrão continua sendo quem espera há mais tempo. A gestão pode dar peso a:
+  - 😠 cliente insatisfeito;
+  - ⚡ cliente com pressa;
+  - ⭐ cliente recorrente;
+  - 💰 cliente que compra muito.
+  - Os ícones aparecem na lista de conversas.
+- Na conversa: **✓ Não precisa responder** (ex.: o cliente só agradeceu) e **⏰ Adiar lembrete** (30 min, 1 h, 3 h, amanhã).
+- O robô passa **direto ao atendente** quando o cliente chega irritado, sem passar pelo menu.
+
 ## Próximas fases
 
 | Fase | Entrega |
 |---|---|
-| 4 | Lembretes de atendimentos esquecidos (tempo configurável) e regras de prioridade configuráveis |
 | 5 | Relatórios e exportação para a gestão |
 | 6–7 | Nota fiscal: exportação e integração, depois emissão própria (NF-e/NFC-e) |
 

@@ -1096,3 +1096,51 @@ a.link {
   color: var(--primary);
   font-weight: 600;
 }
+
+/* ---------- Fase 4: fila e lembretes ---------- */
+.tag.flag {
+  background: transparent;
+  padding: 0 2px;
+  font-size: 0.85rem;
+}
+.wait-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.snooze {
+  position: relative;
+}
+.snooze-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 5;
+  display: grid;
+  gap: 4px;
+  padding: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgb(0 0 0 / 0.12);
+  min-width: 120px;
+}
+.num-input {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto !important;
+}
+.num-input input {
+  width: 90px;
+}
+.weight {
+  display: grid;
+  gap: 8px;
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+}

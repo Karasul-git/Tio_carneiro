@@ -6,6 +6,7 @@
 import type { Match } from './matcher.js';
 import { normalizeText, tokenize } from './normalize.js';
 import type { BotSettings, MenuOption } from './settings.js';
+import { extractDetails } from './summary.js';
 
 export type BotStateName = 'NONE' | 'MENU' | 'COLLECTING' | 'FAQ' | 'HANDOFF' | 'HUMAN';
 
@@ -72,13 +73,15 @@ export function pickOption(settings: BotSettings, text: string, allowKeywords: b
     if (byKey) return byKey;
   }
   if (!allowKeywords) return null;
+  // Vence a palavra-chave mais específica ("meu pedido" ganha de "pedido")
+  let best: { option: MenuOption; size: number } | null = null;
   for (const o of settings.menu) {
     for (const k of o.keywords) {
       const nk = normalizeText(k);
-      if (nk && ` ${t} `.includes(` ${nk} `)) return o;
+      if (nk && ` ${t} `.includes(` ${nk} `) && (!best || nk.length > best.size)) best = { option: o, size: nk.length };
     }
   }
-  return null;
+  return best?.option ?? null;
 }
 
 /** Opção escolhida: olha primeiro a última mensagem da rodada ("oi" + "1" → 1). */
@@ -152,6 +155,12 @@ export function decide(input: EngineInput): EngineOutput {
 
   // Proteção contra excesso de mensagens automáticas
   if (budgetLeft() <= 0) return handoff('limite de mensagens do robô atingido', false);
+
+  // Cliente irritado não deve passar por menu: vai direto para uma pessoa
+  if ((state.botState === 'NONE' || state.botState === 'MENU') && extractDetails([text]).unhappy) {
+    state.intent = state.intent ?? pickFromTurn(settings, text, true)?.intent ?? null;
+    return handoff('cliente parece insatisfeito');
+  }
 
   if (WANTS_HUMAN.test(norm)) {
     state.intent = state.intent ?? 'atendente';

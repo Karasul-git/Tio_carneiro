@@ -267,7 +267,7 @@ class BotRunner {
         triage: result.state.triage as Prisma.InputJsonValue,
         intent: result.state.intent,
         botMessagesInSession: conv.botMessagesInSession + sentCount,
-        ...(resolved ? { awaitingSince: null, unreadCount: 0 } : {}),
+        ...(resolved ? { awaitingSince: null, unreadCount: 0, unhappy: false, urgent: false } : {}),
         ...(handoffReason ? { handoffAt: new Date(), handoffReason } : {}),
       },
       include: conversationInclude,
