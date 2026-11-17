@@ -3,6 +3,7 @@
 Sistema de apoio à confecção. Ele junta os atendimentos de vários WhatsApps, faz a triagem automática, organiza os pedidos e prepara a nota fiscal.
 
 - Escopo e decisões: [`docs/ESCOPO.md`](docs/ESCOPO.md)
+- **Onde paramos e próximos passos:** [`docs/PROXIMOS-PASSOS.md`](docs/PROXIMOS-PASSOS.md)
 - **Roteiro de testes com WhatsApp e celular de verdade:** [`docs/CHECKLIST-TESTES.md`](docs/CHECKLIST-TESTES.md)
 
 ## O que já existe
@@ -104,10 +105,12 @@ O **tempo de resposta** vai da primeira mensagem do cliente até a resposta de u
 
 ## Próximas fases
 
-| Fase | Entrega |
+Detalhes em [`docs/PROXIMOS-PASSOS.md`](docs/PROXIMOS-PASSOS.md).
+
+| Etapa | Entrega |
 |---|---|
-| 5 | Relatórios e exportação para a gestão |
-| 6–7 | Nota fiscal: exportação e integração, depois emissão própria (NF-e/NFC-e) |
+| Próxima | Layout, mais filtros, relatórios mais completos e **dashboard dinâmico com widgets** |
+| Final | Nota fiscal: exportação e integração com o emissor, depois emissão própria (NF-e/NFC-e) |
 
 ## Estrutura
 

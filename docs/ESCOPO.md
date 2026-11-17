@@ -147,9 +147,12 @@ Juntar em um só lugar os atendimentos de **até 5 WhatsApps** da confecção, c
 | **3** | Catálogo de produtos + página de pedido + central de pedidos + cadastro de clientes | ✅ Código pronto (falta testar com celular real) |
 | **4** | Fila por prioridade (tempo de espera) + lembretes configuráveis + motor de regras | ✅ Código pronto (falta testar com celular real) |
 | **5** | Relatórios e exportação para a gestão | ✅ Código pronto (falta testar com dados reais) |
-| **6** | Exportação para nota + integração com o emissor do cliente | Próxima (a planilha de Itens já traz NCM/CFOP) |
-| **7** | Emissão própria de NF-e/NFC-e (SEFAZ) | — |
-| **Futuro** | Avaliação de atendimento, prioridade por recorrência/valor/sentimento, API oficial do WhatsApp | — |
+| **Próxima** | Layout, mais filtros, relatórios mais completos e dashboard dinâmico com widgets | A detalhar (ver `PROXIMOS-PASSOS.md`) |
+| **6** | Exportação para nota + integração com o emissor do cliente | Adiada para o final (a planilha de Itens já traz NCM/CFOP) |
+| **7** | Emissão própria de NF-e/NFC-e (SEFAZ) | Adiada para o final |
+| **Futuro** | Avaliação de atendimento, API oficial do WhatsApp | — |
+
+> **17/11/2026:** a nota fiscal (fases 6 e 7) foi adiada para o final, por ser finalização. A próxima etapa foca em experiência e gestão. Detalhes em [`PROXIMOS-PASSOS.md`](PROXIMOS-PASSOS.md).
 
 ---
 
